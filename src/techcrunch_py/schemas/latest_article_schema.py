@@ -5,3 +5,5 @@ class LatestArticleSchema(BaseModel):
     element_class: str
     href: str
     text: str
+    category: str
+    
