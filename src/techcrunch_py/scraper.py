@@ -5,7 +5,7 @@ from techcrunch_py.selectors.home_selectors import HomePageSelectors
 from techcrunch_py.selectors.article_selectors import ArticleCardSelectors
 from techcrunch_py.selectors.article_selectors import ArticleContentSelectors
 from .schemas.latest_article_schema import ArticleSchema
-x
+
 def get_latest_headlines(limit=10):
     
     client = create_client()
