@@ -1,28 +1,16 @@
 from .client import create_client, home
-from .schemas.latest_article_schema import LatestArticleSchema
 from bs4 import BeautifulSoup
 
 from techcrunch_py.selectors.home_selectors import HomePageSelectors
 from techcrunch_py.selectors.article_selectors import ArticleCardSelectors
-
-def get_latest(limit=10):
-    client = create_client()
-    home_content = client.get(home)
-    home_content.raise_for_status()
-    soup = BeautifulSoup(home_content.text, 'html.parser')
-    links = [LatestArticleSchema(
-        element_class=element.get('class')[0],
-        href=element.get('href'),
-        text=element.get_text()
-    ) for element in soup.find_all('a', class_='wp-block-post-template is-layout-flow wp-block-post-template-is-layout-flow')]
-    links = links[:limit]
-    return links
-
+from techcrunch_py.selectors.article_selectors import ArticleContentSelectors
+from .schemas.latest_article_schema import ArticleSchema
 
 def get_latest_headlines(limit=10):
     
     client = create_client()
     home_content = client.get(home)
+
     home_content.raise_for_status()
 
     homepage = BeautifulSoup(home_content.text, 'html.parser')
@@ -32,10 +20,15 @@ def get_latest_headlines(limit=10):
         class_=HomePageSelectors.LIST_HEADLINES.class_name
     )
 
+    if headlines_ul is None:
+        return []
+
+
     articles = headlines_ul.find_all(
         HomePageSelectors.ARTICLE_LIST.tag,
         class_=HomePageSelectors.ARTICLE_LIST.class_name
     )[:limit]
+
 
     for article in articles:
         title = BeautifulSoup(str(article), 'html.parser').find(
@@ -68,5 +61,25 @@ def get_latest_headlines(limit=10):
             class_=ArticleCardSelectors.FULL_ARTICLE_LINK.class_name
         )
 
-        
+        article_content = client.get(full_article_link.get('href'))
+        article_content.raise_for_status()
+        article_soup = BeautifulSoup(article_content.text, 'html.parser')
+        content_paragraphs = article_soup.find_all(
+            ArticleContentSelectors.CONTENT_PARAGRAPH.tag,
+            class_=ArticleContentSelectors.CONTENT_PARAGRAPH.class_name
+        )
+        content = "\n".join(
+            [para.get_text() for para in content_paragraphs]
+        )
 
+        article_data = ArticleSchema(
+            title=title.get_text() if title else '',
+            category=category.get_text() if category else '',
+            publish_time=article_publish_time.get_text() if article_publish_time else '',
+            author=article_author.get_text() if article_author else '',
+            image_url=article_image.get('src') if article_image else '',
+            full_article_link=full_article_link.get('href') if full_article_link else '',
+            content=content
+        )
+
+        yield article_data

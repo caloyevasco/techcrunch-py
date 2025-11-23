@@ -7,3 +7,7 @@ class ArticleCardSelectors:
     ARTICLE_AUTHOR = Selector('a', 'loop-card__author')
     ARTICLE_IMAGE = Selector('img', 'attachment-card-block-16x9')
     FULL_ARTICLE_LINK = Selector('a', 'loop-card__title-link')
+
+
+class ArticleContentSelectors:
+    CONTENT_PARAGRAPH = Selector('p', 'wp-block-paragraph')
